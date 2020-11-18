@@ -11,15 +11,17 @@ def face_resize_augmentation(images):
     아래와 같이 3가지 각기 다른 h, w 을 가진 image들이 있다면
 
             image 1    image 2      image 3
-    h, w    (10, 6)     (10,7)      (10,8)
+    h, w    (10, 6)     (12,7)      (10,8)
 
     각 이미지들을  각각의 h, w으로  resize 시킵니다.
 
             image 1    image 2      image 3
     h, w    (10, 6)     (10,6)      (10,6)
-    h, w    (10, 7)     (10,7)      (10,7)
-    h, w    (10, 7)     (10,8)      (10,8)
+    h, w    (12, 7)     (12,7)      (12,7)
+    h, w    (10, 8)     (10,8)      (10,8)
 
+    Args:
+        images: ndarray
     :return:
     """
     # image들의 h, w 을 추춣합니다.

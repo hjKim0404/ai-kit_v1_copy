@@ -8,6 +8,7 @@ import cv2
 def image_info(images):
     sizes = []
     for image in images:
+        # image shape H, W ,C
         height, width = image.shape[:2]
         sizes.append([height, width])
 

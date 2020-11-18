@@ -145,6 +145,18 @@ def rect2square(np_images):
 
 
 def cropper(img, stride_h=35, stride_w=35, filter_h=35, filter_w=35):
+    """
+    Description:
+     해당 함수는 이미지를 지정된 크기(filter_h, filter_w) 형태로 cropping 하는 함수입니다.
+     이미지가 cropping 되는 window 을 지정된 길이로 움직입니다.
+
+    :param img: ndarray, shape HWC
+    :param stride_h: int
+    :param stride_w: int
+    :param filter_h: int
+    :param filter_w: int
+    :return: imgs , ndarray, NHWC
+    """
 
     h, w = img.shape[:2]
 
@@ -157,8 +169,10 @@ def cropper(img, stride_h=35, stride_w=35, filter_h=35, filter_w=35):
     for h in h_indices:
         for w in w_indices:
             crop_img = img[h: h + filter_h, w: w + filter_w]
+
+            # Crop된 이미지의 크기가 filter 의 크기가 다르면 반환하지 않는다.
             if (crop_img.shape[:2]) == (filter_h, filter_w):
-                crop_imgs.append(img[h: h + filter_h, w: w + filter_w])
+                crop_imgs.append(crop_img)
 
     return np.array(crop_imgs)
 
@@ -216,7 +230,7 @@ def resize_images(images, resize):
 
 
 def glob_all_files(folder):
-    return  glob(os.path.join(folder, '*'))
+    return glob(os.path.join(folder, '*'))
 
 
 def draw_rectangle(image, x1y1, x2y2,color, thickness):
@@ -230,7 +244,7 @@ def draw_rectangle(image, x1y1, x2y2,color, thickness):
 def random_patch(background, target):
     bg_h, bg_w = background.shape[:2]
     fg_h, fg_w = target.shape[:2]
-    assert (bg_h >= fg_h) & (bg_w >= fg_w), print('{}{}{}{}'.format(bg_h , fg_h, bg_w , fg_w))
+    assert (bg_h >= fg_h) & (bg_w >= fg_w), print('{}{}{}{}'.format(bg_h, fg_h, bg_w , fg_w))
 
     # 가능한 좌표를 생성한다.
     range_h = np.arange(0, bg_h - fg_h)
