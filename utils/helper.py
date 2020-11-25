@@ -270,4 +270,3 @@ def draw_rectangles(image, coords, line_color, line_width):
     for coord in coords:
         image = cv2.rectangle(image, tuple(coord[:2]), tuple(coord[2:]), line_color, line_width)
     return image
-

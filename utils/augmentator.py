@@ -24,7 +24,7 @@ def face_resize_augmentation(images):
     """
     # image들의 h, w 을 추춣합니다.
     sizes = []
-    for ind, img in enumerate(images):
+    for img in images:
         sizes.append(img.shape[:2])
 
     # 이미지들을 resize 합니다.
