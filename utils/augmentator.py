@@ -23,16 +23,7 @@ def face_resize_augmentation(images):
     :return:
     """
     # image들의 h, w 을 추춣합니다.
-    sizes = []
-    for ind, img in enumerate(images):
-        sizes.append(img.shape[:2])
-
-    # 이미지들을 resize 합니다.
-    ret_imgs = []
-    for ind, img in enumerate(images):
-        for h,w in sizes:
-            ret_imgs.append(cv2.resize(img, dsize=(w, h), interpolation=cv2.INTER_NEAREST))
-
+    raise NotImplemented
     return ret_imgs
 
 
