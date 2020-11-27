@@ -37,12 +37,8 @@ def face_resize_augmentation(images):
 
 
 def apply_aug(images):
-    affine = [iaa.Affine(scale=(0.8, 1.2), rotate=(-25, 25), shear=(-1, 1), fit_output=True)]
-    flip = [iaa.Fliplr(0.5)]
-    seq = iaa.Sequential(
-        affine + flip
-    )
-    img_aug = seq(images=images)
+    raise NotImplemented
+
     return img_aug
 
 
