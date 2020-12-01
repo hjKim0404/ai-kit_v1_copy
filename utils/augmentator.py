@@ -1,5 +1,4 @@
 from utils.helper import paths2numpy, show_images, glob_all_files
-import imgaug.augmenters as iaa
 import cv2
 
 
@@ -23,14 +22,16 @@ def face_resize_augmentation(images):
     :return:
     """
     # image들의 h, w 을 추춣합니다.
-    raise NotImplemented
+    sizes = []
+    for image in images:
+        sizes.append(image.shape[:2])
+
+    # 이미지들을 resize 합니다.
+    ret_imgs = []
+    for image in images:
+        for h, w in sizes:
+            ret_imgs.append(cv2.resize(image, dsize=(w, h), interpolation=cv2.INTER_NEAREST))
     return ret_imgs
-
-
-def apply_aug(images):
-    raise NotImplemented
-
-    return img_aug
 
 
 if __name__ == '__main__':
@@ -38,5 +39,4 @@ if __name__ == '__main__':
     paths = glob_all_files(face_folder)
     imgs = paths2numpy(paths)
     augimgs = face_resize_augmentation(imgs)
-    augimgs = apply_aug(augimgs)
     show_images(augimgs)
