@@ -35,7 +35,7 @@ def face_resize_augmentation(images):
 
 
 if __name__ == '__main__':
-    face_folder = '/Users/seongjungkim/PycharmProjects/Wally/images/wally_face_tight_crop'
+    face_folder = '/Users/pai/Downloads/Find_Wally_Deploy/data/wally_face_tight_crop'
     paths = glob_all_files(face_folder)
     imgs = paths2numpy(paths)
     augimgs = face_resize_augmentation(imgs)
