@@ -19,20 +19,8 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="06d134ab-f486-4cac-9e4d-0dc46406ebb2" name="Default Changelist" comment="remove file">
-      <change afterPath="$PROJECT_DIR$/.idea/Find_Wally_Deploy.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/best_model/saved_model.pb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/best_model/variables/variables.data-00000-of-00001" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/best_model/variables/variables.index" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/model_learn.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/model_learn.py" afterDir="false" />
+    <list default="true" id="06d134ab-f486-4cac-9e4d-0dc46406ebb2" name="Default Changelist" comment="modify script">
       <change beforePath="$PROJECT_DIR$/scripts/model_vaild.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/model_vaild.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/datagenerator.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/datagenerator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/helper.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -236,7 +224,49 @@
       <option name="project" value="LOCAL" />
       <updated>1607415599532</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="add annotations">
+      <created>1607415729148</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1607415729148</updated>
+    </task>
+    <task id="LOCAL-00008" summary="merge 'analysis.py' and 'augmentator.py' into 'helper.py'">
+      <created>1607415845084</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1607415845084</updated>
+    </task>
+    <task id="LOCAL-00009" summary="add best model">
+      <created>1607415897258</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1607415897258</updated>
+    </task>
+    <task id="LOCAL-00010" summary="add new files">
+      <created>1607415913097</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1607415913097</updated>
+    </task>
+    <task id="LOCAL-00011" summary="add new files">
+      <created>1607415917532</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1607415917532</updated>
+    </task>
+    <task id="LOCAL-00012" summary="modify script">
+      <created>1607415975560</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1607415975560</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -257,7 +287,12 @@
     <MESSAGE value="delete useless code" />
     <MESSAGE value="add missing files" />
     <MESSAGE value="remove file" />
-    <option name="LAST_COMMIT_MESSAGE" value="remove file" />
+    <MESSAGE value="add annotations" />
+    <MESSAGE value="merge 'analysis.py' and 'augmentator.py' into 'helper.py'" />
+    <MESSAGE value="add best model" />
+    <MESSAGE value="add new files" />
+    <MESSAGE value="modify script" />
+    <option name="LAST_COMMIT_MESSAGE" value="modify script" />
   </component>
   <component name="WindowStateProjectService">
     <state x="960" y="334" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1607392364316">
