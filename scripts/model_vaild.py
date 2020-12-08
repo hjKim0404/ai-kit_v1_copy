@@ -1,33 +1,51 @@
-from tensorflow.keras.models import load_model
+# 1. 필요한 패키지들을 불러옵니다.
+import os
+BASE_PATH = os.path.dirname(os.getcwd())
+os.chdir(BASE_PATH)
+
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.helper import glob_all_files, paths2numpy, cropper, draw_rectangles
 
-model = load_model('/Users/pai/Downloads/Find_Wally_Deploy/models/best_model4')
+from tensorflow.keras.models import load_model
 
-# 모델 검증하기
-paths = glob_all_files('/Users/pai/Downloads/Find_Wally_Deploy/data/full_images_val')
+from utils.helper import cropper, glob_all_files, paths2numpy, draw_rectangles
+
+
+# 2. 학습 시킨 모델을 불러옵니다
+model = load_model('./models/best_model')
+model.summary()
+
+
+# 3. 평가용 데이터를 불러옵니다.
+paths = glob_all_files('./data/full_images_val/')
+
 imgs = paths2numpy(paths)
 
 bucket_crop_imgs = []
 bucket_crop_crds = []
 for img in imgs:
-    crop_imgs, crop_crds = cropper(img, 10, 10, 35, 35)
-    bucket_crop_imgs.append(crop_imgs)
-    bucket_crop_crds.append(crop_crds)
+    cropped_images, cropped_coords = cropper(img, 10, 10, 34, 34)
+    bucket_crop_imgs.append(cropped_images)
+    bucket_crop_crds.append(cropped_coords)
 
 
-for ind, img in enumerate(imgs):
-    cropped_imgs = bucket_crop_imgs[ind]
-    cropped_crds = bucket_crop_crds[ind]
-    cropped_crds = np.array(cropped_crds)
+# 4. 모델을 평가용 데이터로 테스트합니다.
+# 잘린 이미지 중 월리가 있는 이미지를 찾고 해당 이미지의 좌표를 원본 이미지에 출력합니다
+for img_ind, im in enumerate(imgs):
+    cropped_imgs = bucket_crop_imgs[img_ind]
+    cropped_crds = bucket_crop_crds[img_ind]
 
-    indices = (model.predict(cropped_imgs) > 0.5)[:, 0]
+    # Wally 라고 생각되는 이미지의 index을 가져옵니다.
+    predicts = model.predict(cropped_imgs)
+    bool_mask = (predicts > 0.5)[:, 0]
 
-    for ind, val in enumerate(indices):
-        if val == True:
-            target_crds = cropped_crds[ind]
-            img = draw_rectangles(img, target_crds, (255, 0, 0), 3)
+    # Wally 라고 생각되는 이미지 좌표를 가져옵니다.
+    target_crds = np.array(cropped_crds)[bool_mask]
 
-            plt.imshow(img)
-            plt.show()
+    # 전체 이미지에 월리라고 예측 되는 부분에 사각형을 그립니다.
+    predicts = predicts[bool_mask]  # 불리언 마스크를 적용시켰을 때의 예측값을 저장합니다.
+    result_image = draw_rectangles(im, target_crds, (255, 0, 0), 3, predicts[:, 0])
+
+    fig = plt.figure(figsize=(10, 10))
+    plt.imshow(result_image)
+    plt.show()
