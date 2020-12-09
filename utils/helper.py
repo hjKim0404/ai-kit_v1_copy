@@ -84,7 +84,7 @@ def images_cropper(images, stride_h=10, stride_w=10, filter_h=35, filter_w=35):
     bucket_images = []
     bucket_coords = []
     for image in images:
-        cropped_imgs , cropped_crds = \
+        cropped_imgs, cropped_crds = \
         cropper(image, stride_h=stride_h, stride_w=stride_w, filter_h=filter_h, filter_w=filter_w)
         bucket_images.append(cropped_imgs)
         bucket_coords.extend(cropped_crds)
@@ -246,7 +246,7 @@ def rectangle_filter(coords, overlapThresh, predicts):
         last = len(pred_idxs) - 1
         i = pred_idxs[last]
         pick.append(i)
-        suppress = [last] # pred_idxs에 있는 애들 없애는 역할
+        suppress = [last]  # pred_idxs에 있는 애들 없애는 역할
 
         # 중첩 비율 계산을 통해 필터링할 사각형들을 찾는 과정입니다.
         # 예측값 인덱스들을 모두 순회합니다.
@@ -281,7 +281,6 @@ def rectangle_filter(coords, overlapThresh, predicts):
         pred_idxs = np.delete(pred_idxs, suppress)
 
     return coords[pick]
-
 
 
 def face_resize_augmentation(images):

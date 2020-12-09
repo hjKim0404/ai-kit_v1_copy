@@ -47,15 +47,13 @@ class TightFaceProvider(Sequence):
         # background 이미지를 무작위로 섞습니다.
         np.random.shuffle(self.bg_imgs)
 
-
     def __len__(self):
         """
         한 epoch 당 step 수를 구해주기 위한 매직 메소드.
         한 epoch 당 step 수: 전체 데이터 수  / 배치 크기
         """
         # 배치 사이즈가 절반인 이유는 step 수를 맞추기 위함
-        return np.int(np.ceil(len(self.bg_imgs)/ (self.batch_size/2)))
-
+        return np.int(np.ceil(len(self.bg_imgs)/(self.batch_size/2)))
 
     def __getitem__(self, index):
         """
@@ -71,7 +69,7 @@ class TightFaceProvider(Sequence):
         bg_labs = np.zeros(len(bg_imgs))
 
         # foreground 이미지에 해당하는 배치 사이즈를 지정한다.
-        fg_batch = self.batch_size - len(bg_imgs)
+        fg_batch = len(bg_imgs)
         # 랜덤하게 월리 얼굴을 가져오기 위한 fg_batch 개수 만큼의 인덱스를 무작위로 가져온다.
         indices = np.random.choice(np.arange(len(self.fg_imgs)), size=fg_batch)
         # 위에서 지정한 랜덤 인덱스에 맞는 월리 얼굴을 가져온다.
