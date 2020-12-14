@@ -70,7 +70,7 @@
 ├── models/                   		- 학습이 완료된 인공지능 모델 저장
 │   └── new_model/                      - 예제로 만들어진 인공지능 학습 모델
 │ 
-├── scripts/                 	 - 프로그램을 직접 구동하기 위한 스트립트
+├── scripts/                 	       - 프로그램을 직접 구동하기 위한 스트립트
 │   ├── model_training.py     		- 인공지능의 학습 모델을 제작 및 검증하기 위한 python 파일
 │   └── model_test.py         		- 학습이 완료된 인공지능 모델을 불러와 테스트하기 위한 python파일
 │   ├── model_training.ipynb  		- 인공지능의 학습 모델을 제작 및 검증하기 위한 ipynb 파일 #삭제
