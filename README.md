@@ -49,13 +49,14 @@
 │   ├── book1/                          - 월리를 찾아라 1권 책의 이미지
 │   │   ├── common/                     - 네 개의 타켓에 대해 공통으로 사용되는 리소스
 │   │   │   ├── block_imgs/             - 타겟 얼굴이 가려진 백그라운드 이미지
-│   │   │   └── full_images_test/	- 평가에 사용되는 이미지
+│   │   │   ├── full_images_test/	- 평가에 사용되는 이미지
+│   │   │   └── full_image_val/	  - background 이미지
 │   │   │ 
 │   │   ├── wally/                      - 월리 리소스
 │   │   │   ├── face_tight_crop/	- crop된 타겟 얼굴 이미지
 │   │   │   └── full_images_val/	- 검증에 사용되는 이미지
 │   │   │       ├── background/		- crop된 background 이미지
-│   │   │       └── full_image/		- background 이미지
+│   │   │       └── foreground/		- crop된 foreground 이미지
 │   │   │
 │   │   ├── girlfriend/                 - 월리 여자친구 리소스 (하위 구조 wally/와 동일)
 │   │   │
