@@ -157,7 +157,16 @@ def glob_all_files(folder):
     Return:
         list : 지정한 경로 안에 있는 모든 파일의 경로들을 list 로 반환합니다.
     """
-    return glob(os.path.join(folder, '*'))
+    paths = []
+    if type(folder) == list:
+        for dir in folder:
+            path = glob(os.path.join(dir, '*'))
+            paths.append(path)
+
+        return paths
+
+    else:
+        return glob(os.path.join(folder, '*'))
 
 
 def random_patch(bg_img, fg_img):
