@@ -3,36 +3,125 @@ import cv2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import imgaug as ia
+import imgaug.augmenters as iaa
+
 from PIL import Image
 from glob import glob
 
 
-def show_images(images, figsize=(10, 10), titles=None):
+def glob_all_files(folder):
     """
     Describes:
-        imgs 로 들어오는 np.array 형태의 이미지들을 화면에 출력합니다.
+        folder 경로에 있는 모든 파일의 경로들을 list 로 저장합니다.
     Parameter:
-        imgs : np.array, 이미지 배열이 들어옵니다.
-        titles   : list, 각 이미지의 제목을 순서대로 넣음
-        figsize : tuple, 출력될 이미지의 크기를 지정함 (이미지의 너비, 이미지의 높이)
+        folder : str, folder 경로가 들어옵니다.
+    Return:
+        list : 지정한 경로 안에 있는 모든 파일의 경로들을 list 로 반환합니다.
     """
-    length = np.maximum(int(np.ceil(np.sqrt(len(images)))), 2)
-    fig, axes = plt.subplots(length, length, figsize=figsize)
-    axes = axes.ravel()
-    for ind, ax in enumerate(axes):
-        try:
-            ax.imshow(images[ind])
-            if titles:
-                ax.set_title(titles[ind])
-            ax.axis('off')
-        except IndexError:
-            pass
 
-    plt.tight_layout()
-    plt.show()
+    # 만약 받아온 폴더 경로가 리스트 형식(한 번에 여러 개의 폴더 경로를 입력)일 경우
+    if type(folder) == list:
+        paths = []
+        for child in folder:
+            path = glob(os.path.join(child, '*'))
+            paths.append(path)
+
+        return paths
+
+    else:
+        return glob(os.path.join(folder, '*'))
 
 
-def cropper(img, stride_h=10, stride_w=10, filter_h=35, filter_w=35):
+def paths2pil(paths, resize=None, gray=None):
+    """
+    Describes:
+        paths 에 있는 이미지 파일들을 pil 형태로 list 에 저장합니다.
+    Parameter:
+        paths : str, 해당 경로의 이미지 파일들을 불러옵니다.
+        gray : none,
+            1. gray 매개변수에 값을 넣을 경우, 경로의 이미지들을 흑백사진으로 변환하여 저장합니다.
+            2. gray 매개변수에 값을 넣지 않을 경우, 경로의 이미지들을 컬러사진으로 변환하여 저장합니다.
+        resize : tuple, (너비, 높이) 형식으로 설정되어있을 경우, 해당 값으로 이미지들의 크기를 변환합니다.
+    Return:
+        list : pil 타입의 이미지들이 list 에 담겨 반환됩니다.
+    """
+    bucket_pils = []
+    for path in paths:
+        if gray:
+            img = Image.open(path).convert('L')
+        else:
+            img = Image.open(path).convert('RGB')
+
+        if resize:
+            img = img.resize(resize, Image.ANTIALIAS)
+        bucket_pils.append(img)
+
+    return bucket_pils
+
+
+def pil2numpy(images):
+    """
+    Describes:
+        pil 타입의 이미지 들이 np.array 타입으로 변경됩니다.
+    Parameter:
+        images : list, pil 타입의 이미지가 담긴 list 가 들어옵니다.
+    Return:
+        list : np.array 형태의 이미지들이 list 에 담겨 반환됩니다.
+    """
+    return [np.array(image) for image in images]
+
+
+def paths2numpy(paths, resize=None, gray=None):
+    """
+    Describes:
+        경로에 있는 이미지 파일들을 paths2pil 함수로 pil 타입으로 바꾸고 다시 np.array 형태로 바꿔줍니다.
+    Parameter:
+        paths : str, 해당 경로의 그림파일을 불러옴
+        gray : none,
+            1. gray 매개변수에 값을 넣을 경우, 경로의 이미지들을 흑백사진으로 변환하여 저장합니다.
+            2. gray 매개변수에 값을 넣지 않을 경우, 경로의 이미지들을 컬러사진으로 변환하여 저장합니다.
+        resize : tuple, (너비, 높이) 형식으로 설정되어있을 경우, 해당 값으로 이미지들의 크기를 변환합니다.
+    Return:
+        list : np.array 타입의 이미지들이 list 에 담겨 반환됩니다.
+    """
+    pils = paths2pil(paths, resize=resize, gray=gray)
+    return pil2numpy(pils)
+
+
+def face_resize_augmentation(images):
+    """
+
+    해당 함수는 wally 의 얼굴을 tight 하게 crop 해놓은 이미지를 사용합니다.
+    예를 들어
+    아래와 같이 3가지 각기 다른 h, w 을 가진 image들이 있다면
+
+            image 1    image 2      image 3
+    h, w    (10, 6)     (10,7)      (10,8)
+
+    각 이미지들을  각각의 h, w으로  resize 시킵니다.
+
+            image 1    image 2      image 3
+    h, w    (10, 6)     (10,6)      (10,6)
+    h, w    (10, 7)     (10,7)      (10,7)
+    h, w    (10, 7)     (10,8)      (10,8)
+
+    :return:
+    """
+    # 월리 얼굴들의 모든 사이즈를 가져온다.
+    sizes = []
+    for image in images:
+        sizes.append(image.shape[:2])
+
+    # 각 이미지마다 위에서 구한 모든 사이즈들 별로 적용시켜 저장한다.
+    resized_imgs = []
+    for image in images:
+        for h, w in sizes:
+            resized_imgs.append(cv2.resize(image, dsize=(w, h), interpolation=cv2.INTER_NEAREST))
+    return resized_imgs
+
+
+def cropper(img, stride_h=10, stride_w=10, filter_h=36, filter_w=36):
     """
     Describes:
         background 이미지를 stride 단위마다 filter 의 h,w 크기로 분할해주는 함수입니다.
@@ -67,7 +156,7 @@ def cropper(img, stride_h=10, stride_w=10, filter_h=35, filter_w=35):
     return np.array(crop_imgs), crop_crds
 
 
-def images_cropper(images, stride_h=10, stride_w=10, filter_h=35, filter_w=35):
+def images_cropper(images, stride_h=10, stride_w=10, filter_h=36, filter_w=36):
     """
     Describes:
         여러 개의 이미지들 각각에 cropper 함수를 적용하여 잘라준 후 하나로 묶어줍니다.
@@ -92,81 +181,34 @@ def images_cropper(images, stride_h=10, stride_w=10, filter_h=35, filter_w=35):
     return np.concatenate(bucket_images, axis=0), bucket_coords
 
 
-def paths2pil(paths, resize=None, gray=None):
+def random_imaug(fg_img):
     """
     Describes:
-        paths 에 있는 이미지 파일들을 pil 형태로 list 에 저장합니다.
+        포그라운드 이미지들에 여러가지 효과들을 적용시킨 후 저장하는 함수입니다.
+        참고: https://github.com/aleju/imgaug (패키지 깃헙)
+             https://imgaug.readthedocs.io/en/latest/source/examples_basics.html (코드)
     Parameter:
-        paths : str, 해당 경로의 이미지 파일들을 불러옵니다.
-        gray : none,
-            1. gray 매개변수에 값을 넣을 경우, 경로의 이미지들을 흑백사진으로 변환하여 저장합니다.
-            2. gray 매개변수에 값을 넣지 않을 경우, 경로의 이미지들을 컬러사진으로 변환하여 저장합니다.
-        resize : tuple, (너비, 높이) 형식으로 설정되어있을 경우, 해당 값으로 이미지들의 크기를 변환합니다.
+        fg_imgs : list, 포그라운드 이미지들
     Return:
-        list : pil 타입의 이미지들이 list 에 담겨 반환됩니다.
+        list : 여러가지 효과가 적용된 포그라운드 이미지
     """
-    bucket_pils = []
-    for path in paths:
-        if gray:
-            img = Image.open(path).convert('L')
-        else:
-            img = Image.open(path).convert('RGB')
+    ia.seed(1)
+    # Example batch of images.
+    # The array has shape (32, 64, 64, 3) and dtype uint8.
+    images = fg_img
 
-        if resize:
-            img = img.resize(resize, Image.ANTIALIAS)
-        bucket_pils.append(img)
+    seq = iaa.Sequential([
+        # Apply affine transformations to each image.
+        # Scale/zoom them, translate/move them, rotate them and shear them.
+        iaa.Sometimes(
+            0.5,
+            iaa.GaussianBlur(sigma=(0, 0.5))
+        ),
+    ], random_order=True)  # apply augmenters in random order
 
-    return bucket_pils
+    images_aug = seq(images=images)
 
-
-def paths2numpy(paths, resize=None, gray=None):
-    """
-    Describes:
-        경로에 있는 이미지 파일들을 paths2pil 함수로 pil 타입으로 바꾸고 다시 np.array 형태로 바꿔줍니다.
-    Parameter:
-        paths : str, 해당 경로의 그림파일을 불러옴
-        gray : none,
-            1. gray 매개변수에 값을 넣을 경우, 경로의 이미지들을 흑백사진으로 변환하여 저장합니다.
-            2. gray 매개변수에 값을 넣지 않을 경우, 경로의 이미지들을 컬러사진으로 변환하여 저장합니다.
-        resize : tuple, (너비, 높이) 형식으로 설정되어있을 경우, 해당 값으로 이미지들의 크기를 변환합니다.
-    Return:
-        list : np.array 타입의 이미지들이 list 에 담겨 반환됩니다.
-    """
-    pils = paths2pil(paths, resize=resize, gray=gray)
-    return pil2numpy(pils)
-
-
-def pil2numpy(images):
-    """
-    Describes:
-        pil 타입의 이미지 들이 np.array 타입으로 변경됩니다.
-    Parameter:
-        images : list, pil 타입의 이미지가 담긴 list 가 들어옵니다.
-    Return:
-        list : np.array 형태의 이미지들이 list 에 담겨 반환됩니다.
-    """
-    return [np.array(image) for image in images]
-
-
-def glob_all_files(folder):
-    """
-    Describes:
-        folder 경로에 있는 모든 파일의 경로들을 list 로 저장합니다.
-    Parameter:
-        folder : str, folder 경로가 들어옵니다.
-    Return:
-        list : 지정한 경로 안에 있는 모든 파일의 경로들을 list 로 반환합니다.
-    """
-    paths = []
-    if type(folder) == list:
-        for dir in folder:
-            path = glob(os.path.join(dir, '*'))
-            paths.append(path)
-
-        return paths
-
-    else:
-        return glob(os.path.join(folder, '*'))
+    return images_aug
 
 
 def random_patch(bg_img, fg_img):
@@ -198,24 +240,29 @@ def random_patch(bg_img, fg_img):
     return bg_img
 
 
-def draw_rectangles(img, coords, color, width, predicts):
+def show_images(images, figsize=(10, 10), titles=None):
     """
     Describes:
-        img 의 coords 좌표에 color 색깔과 width 선 굵기를 가진 사각형을 그려줍니다.
+        imgs 로 들어오는 np.array 형태의 이미지들을 화면에 출력합니다.
     Parameter:
-        img : np.array, 원본 background 이미지
-        coords : np.array, 월리 얼굴이 있을 것으로 예상되는 좌표들 [x1,y1,x2,y2]
-        color : tuple, (R,G,B) 선의 색깔.
-        width : int, 선의 두께
-    Return:
-        np.array : 목표 지점에 사각형이 그려진 이미지를 반환합니다.
+        imgs : np.array, 이미지 배열이 들어옵니다.
+        titles   : list, 각 이미지의 제목을 순서대로 넣음
+        figsize : tuple, 출력될 이미지의 크기를 지정함 (이미지의 너비, 이미지의 높이)
     """
-    filtered_coords = rectangle_filter(coords, 0.3, predicts)
+    length = np.maximum(int(np.ceil(np.sqrt(len(images)))), 2)
+    fig, axes = plt.subplots(length, length, figsize=figsize)
+    axes = axes.ravel()
+    for ind, ax in enumerate(axes):
+        try:
+            ax.imshow(images[ind])
+            if titles:
+                ax.set_title(titles[ind])
+            ax.axis('off')
+        except IndexError:
+            pass
 
-    for coord in filtered_coords:
-        img = cv2.rectangle(img, tuple(coord[:2]), tuple(coord[2:]), color, width)
-
-    return img
+    plt.tight_layout()
+    plt.show()
 
 
 def rectangle_filter(coords, overlapThresh, predicts):
@@ -226,6 +273,7 @@ def rectangle_filter(coords, overlapThresh, predicts):
     Parameter:
         coords : np.array, 월리 얼굴이 있을 것으로 예상되는 좌표들 [x1, y1, x2, y2]
         overlapThresh : float, 중첩 비율 기준 값
+        predicts : np.array, 예측값들이 저장된 배열. 높은 예측값을 가진 좌표들을 기준으로 이미지에 사각형이 그려지게 된다.
     Return:
         np.array, 중첩 비율 기준치를 초과하는 사각형들을 제외한 나머지 사각형들의 좌표가 저장된 넘파이 배열
     """
@@ -292,36 +340,25 @@ def rectangle_filter(coords, overlapThresh, predicts):
     return coords[pick]
 
 
-def face_resize_augmentation(images):
+def draw_rectangles(img, coords, color, width, predicts):
     """
-
-    해당 함수는 wally 의 얼굴을 tight 하게 crop 해놓은 이미지를 사용합니다.
-    예를 들어
-    아래와 같이 3가지 각기 다른 h, w 을 가진 image들이 있다면
-
-            image 1    image 2      image 3
-    h, w    (10, 6)     (10,7)      (10,8)
-
-    각 이미지들을  각각의 h, w으로  resize 시킵니다.
-
-            image 1    image 2      image 3
-    h, w    (10, 6)     (10,6)      (10,6)
-    h, w    (10, 7)     (10,7)      (10,7)
-    h, w    (10, 7)     (10,8)      (10,8)
-
-    :return:
+    Describes:
+        img 의 coords 좌표에 color 색깔과 width 선 굵기를 가진 사각형을 그려줍니다.
+    Parameter:
+        img : np.array, 원본 background 이미지
+        coords : np.array, 월리 얼굴이 있을 것으로 예상되는 좌표들 [x1,y1,x2,y2]
+        color : tuple, (R,G,B) 선의 색깔.
+        width : int, 선의 두께
+        predicts : np.array, rectangle_filter 함수에서 사용될 예측값들.
+    Return:
+        np.array : 목표 지점에 사각형이 그려진 이미지를 반환합니다.
     """
-    # 월리 얼굴들의 모든 사이즈를 가져온다.
-    sizes = []
-    for image in images:
-        sizes.append(image.shape[:2])
+    filtered_coords = rectangle_filter(coords, 0.3, predicts)
 
-    # 각 이미지마다 위에서 구한 모든 사이즈들 별로 적용시켜 저장한다.
-    resized_imgs = []
-    for image in images:
-        for h, w in sizes:
-            resized_imgs.append(cv2.resize(image, dsize=(w, h), interpolation=cv2.INTER_NEAREST))
-    return resized_imgs
+    for coord in filtered_coords:
+        img = cv2.rectangle(img, tuple(coord[:2]), tuple(coord[2:]), color, width)
+
+    return img
 
 
 def image_info(images):

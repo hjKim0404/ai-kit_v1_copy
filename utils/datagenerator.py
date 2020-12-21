@@ -1,7 +1,7 @@
 import numpy as np
 from tensorflow.keras.utils import Sequence
 from utils.helper import glob_all_files, random_patch, show_images, paths2numpy, images_cropper
-from utils.helper import face_resize_augmentation
+from utils.helper import face_resize_augmentation, random_imaug
 from utils.helper import image_info
 
 
@@ -20,10 +20,11 @@ class TightFaceProvider(Sequence):
         :param fg_folder: Tight 하게 Crop 된 월리 이미지들이 들어 있는 폴더
         :param bg_folder: 월리가 있는 부분은 block 처리된 full image 가 들어 있는 폴더
         """
-        # 지정된 배치 사이즈
+        # 배치 사이즈를 입력받은 배치 사이즈 * 찾고자하는 캐릭터들의 수+1 로 설정합니다.
         self.batch_size = batch_size * (len(fg_folder)+1)
-        self.fg_imgs = []
 
+        # 포그라운드 이미지들을 저장할 리스트형태의 인스턴스 변수 생성
+        self.fg_imgs = []
         # 월리 얼굴을 경로로 가져온다.
         paths = glob_all_files(fg_folder)
 
@@ -35,6 +36,8 @@ class TightFaceProvider(Sequence):
             self.fg_imgs.append(images)
 
         """
+        현재 crop 사이즈를 외부에서 입력받은 값을 기준으로 하기 때문에 주석처리 합니다.
+        
         # 월리 얼굴의 최대 높이, 최대 너비를 구한다.
         (max_h, min_h), (max_w, _), (_, _) = image_info(self.fg_imgs)
         # 높이와 너비 중 더 큰 것을 max_length에 저장한다.
@@ -70,7 +73,7 @@ class TightFaceProvider(Sequence):
         end = (index+1) * int(self.batch_size/(len(self.fg_imgs)+1))
 
         # background 인덱싱 후 길이에 맞게 라벨을 붙인다.
-        # background label: 0
+        # background label: 0(배경)
         bg_imgs = self.bg_imgs[start: end]
         bg_labs = np.zeros(len(bg_imgs))
 
@@ -86,8 +89,11 @@ class TightFaceProvider(Sequence):
             # 위에서 지정한 랜덤 인덱스에 맞는 월리 얼굴을 가져온다.
             patch_imgs = [self.fg_imgs[i][ind] for ind in indices]
             # 길이에 맞게 라벨을 붙인다.
-            # foreground label: 1
+            # foreground label: 1(월리), 2(여자친구), 3(마법사), 4(가짜 월리)
             patch_labs = np.full(len(patch_imgs), i+1)
+
+            # foreground 이미지들을 여러가지 형태로 변환시킵니다.
+            patch_imgs = random_imaug(patch_imgs)
 
             # 기존의 월리 얼굴을 background의 랜덤한 위치에 붙여준 후, 그 이미지를 foreground 이미지로 다시 저장한다.
             for ind, img in enumerate(bg_imgs.copy()):
@@ -104,6 +110,9 @@ class TightFaceProvider(Sequence):
         batch_xs = np.concatenate([concat_fg_x, bg_imgs], axis=0)
         # batch_ys에는 background, foreground의 라벨들이 들어간다.
         batch_ys = np.concatenate([concat_fg_y, bg_labs], axis=0)
+
+        batch_ys = batch_ys.astype(np.int8)
+
         return batch_xs, batch_ys
 
 
