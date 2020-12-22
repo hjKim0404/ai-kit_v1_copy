@@ -117,7 +117,8 @@
 - [ ] datagenerator 을 data로 이름 바꾸기
 - [ ] package 로 만들어서 pip로 올리기
 - [ ] 교육 내용에 package 다운받는 과정 추가
-
+- [ ] datagenarator의 batch_xs, model_training의 val_images, cropped_imgs, model_test의 cropped_imgs 들을 255로 나누기.
+- [ ] 255로 나뉜 이미지들을 기준으로 학습 모델 다시 만들기.
 
 
 
