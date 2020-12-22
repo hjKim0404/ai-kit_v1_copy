@@ -1,6 +1,5 @@
-import sys
-import cv2
 import os
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import imgaug as ia
@@ -21,6 +20,7 @@ def glob_all_files(folder):
     """
 
     # 만약 받아온 폴더 경로가 리스트 형식(한 번에 여러 개의 폴더 경로를 입력)일 경우
+    # 리스트 안의 모든 경로들을 순회하며 그 안의 파일들을 paths 리스트에 append 하여 가져옵니다.
     if type(folder) == list:
         paths = []
         for child in folder:
@@ -104,7 +104,7 @@ def face_resize_augmentation(images):
             image 1    image 2      image 3
     h, w    (10, 6)     (10,6)      (10,6)
     h, w    (10, 7)     (10,7)      (10,7)
-    h, w    (10, 7)     (10,8)      (10,8)
+    h, w    (10, 8)     (10,8)      (10,8)
 
     :return:
     """
@@ -148,10 +148,10 @@ def cropper(img, stride_h=10, stride_w=10, filter_h=36, filter_w=36):
     crop_crds = []
     for y in range_h:
         for x in range_w:
-            crop_img = img[y: y+filter_h, x: x+filter_w]
+            crop_img = img[y: y + filter_h, x: x + filter_w]
             if crop_img.shape[:2] == (filter_h, filter_w):
                 crop_imgs.append(crop_img)
-                crop_crds.append([x, y, x+filter_w, y+filter_h])
+                crop_crds.append([x, y, x + filter_w, y + filter_h])
 
     return np.array(crop_imgs), crop_crds
 
@@ -172,13 +172,15 @@ def images_cropper(images, stride_h=10, stride_w=10, filter_h=36, filter_w=36):
     """
     bucket_images = []
     bucket_coords = []
+
     for image in images:
         cropped_imgs, cropped_crds = \
-        cropper(image, stride_h=stride_h, stride_w=stride_w, filter_h=filter_h, filter_w=filter_w)
-        bucket_images.append(cropped_imgs)
-        bucket_coords.extend(cropped_crds)
+            cropper(image, stride_h=stride_h, stride_w=stride_w, filter_h=filter_h, filter_w=filter_w)
 
-    return np.concatenate(bucket_images, axis=0), bucket_coords
+        bucket_images.append(cropped_imgs)
+        bucket_coords.append(cropped_crds)
+
+    return np.array(bucket_images), bucket_coords
 
 
 def random_imaug(fg_img):
@@ -214,7 +216,7 @@ def random_imaug(fg_img):
 def random_patch(bg_img, fg_img):
     """
     Describes:
-        background 이미지의 임의의 위치에 target 이미지(월리 얼굴)를 붙여줍니다. 해당 이미지는 foreground 이미지가 됩니다.
+        background 이미지의 임의의 위치에 target 이미지(캐릭터 얼굴)를 붙여줍니다. 해당 이미지는 foreground 이미지가 됩니다.
     Parameter:
         bg_img : np.array, 배경 백그라운드 이미지
         fg_img : np.array, 월리 얼굴 포어그라운드 이미지
@@ -233,10 +235,12 @@ def random_patch(bg_img, fg_img):
     range_w = range(0, bg_w - fg_w)
 
     # fg_img를 붙일 임의의 좌표를 선정한다.
-    rand_h = np.random.choice(range_h, 1)[0]
-    rand_w = np.random.choice(range_w, 1)[0]
+    rand_h = np.random.choice(range_h)
+    rand_w = np.random.choice(range_w)
 
-    bg_img[rand_h: rand_h+fg_h, rand_w: rand_w+fg_w] = fg_img
+    # bg_img의 임의의 좌표에 fg_img를 붙여준다.
+    bg_img[rand_h: rand_h + fg_h, rand_w: rand_w + fg_w] = fg_img
+
     return bg_img
 
 
@@ -265,14 +269,61 @@ def show_images(images, figsize=(10, 10), titles=None):
     plt.show()
 
 
-def rectangle_filter(coords, overlapThresh, predicts):
+def find_non_background(predicts, limit=0, target=0):
+    """
+    Describes:
+        학습 모델이 이미지에서 찾고자하는 대상으로 판단되는 모든 부분을 true 로 설정하는 마스크를 생성하는 함수입니다.
+    Parameter:
+        predicts : np.array, 마스크를 생성에 사용될 예측값들 입니다.
+        limit : float, 최대 예측값들 중 해당 수치 이상의 값을 가진 경우만 true 로 설정합니다.
+        target : int, 찾고자하는 대상을 설정합니다. 0: 모든 캐릭터, 1: 월리, 2: 여자친구, 3: 마법사, 4: 가짜 월리
+    Return:
+        np.array : 주어진 조건들에 알맞는 마스크를 리턴
+    """
+
+    # 배경이 아닌 것으로 추정되는 부분들의 인덱스를 모두 true 로 설정. 이때, 해당 부분들의 예측값이 limit 를 넘어야만 한다.
+    if target == 0:
+        # np.argsort(predicts)[:, -1] = axis 마지막 축을 기준으로 오름차순 정렬된 예측값 인덱스의 마지막 위치(최대 예측값)
+        bool_mask = (np.argsort(predicts)[:, -1] != target) & (np.max(predicts, axis=1) > limit)
+
+    # 찾고자하는 캐릭터의 예측값이 가장 높게 설정된 부분들의 인덱스를 모두 true 로 설정. 이때, 해당 부분들의 예측값이 limit 를 넘어야만 한다.
+    else:
+        bool_mask = (np.argsort(predicts)[:, -1] == target) & (np.max(predicts, axis=1) > limit)
+    
+    return bool_mask
+
+
+def find_max_prediction(predicts, target=0):
+    """
+    Describes:
+        학습 모델이 이미지에서 찾고자하는 대상의 예측값이 가장 높은 부분을 true 로 설정하는 마스크를 생성하는 함수입니다.
+    Parameter:
+        predicts : np.array, 마스크를 생성에 사용될 예측값들 입니다.
+        target : int, 찾고자하는 대상을 설정합니다. 0: 모든 캐릭터, 1: 월리, 2: 여자친구, 3: 마법사, 4: 가짜 월리
+    Return:
+        np.array : 주어진 조건들에 알맞는 마스크를 리턴
+    """
+
+    # 모든 캐릭터들의 최대 예측값이 설정된 부분들의 인덱스를 가져온다.
+    if target == 0:
+        # np.argsort(predicts*-1, axis=0) = 0번 축을 기준으로 -1이 곱해진 predicts 를 오름차순 정렬 (실제론 predicts 를 내림차순)
+        max_mask = np.argsort(predicts*-1, axis=0)[0, 1:5]
+
+    # 특정 캐릭터의 최대 예측값이 설정된 부분의 인덱스를 가져온다.
+    else:
+        # 특정 캐릭터의 최대 예측값이 일치하는 인덱스를 구해온다.
+        max_mask = np.where(predicts[:, target] == np.max(predicts[:, target]))
+
+    return max_mask
+
+
+def rectangle_filter(coords, predicts):
     """
     Describes:
         NMS 기법을 활용하여 테스트 과정에서 한 오브젝트에 사각형 여러 개가 그려지는 것을 방지합니다.
         참고: https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
     Parameter:
         coords : np.array, 월리 얼굴이 있을 것으로 예상되는 좌표들 [x1, y1, x2, y2]
-        overlapThresh : float, 중첩 비율 기준 값
         predicts : np.array, 예측값들이 저장된 배열. 높은 예측값을 가진 좌표들을 기준으로 이미지에 사각형이 그려지게 된다.
     Return:
         np.array, 중첩 비율 기준치를 초과하는 사각형들을 제외한 나머지 사각형들의 좌표가 저장된 넘파이 배열
@@ -303,7 +354,7 @@ def rectangle_filter(coords, overlapThresh, predicts):
         last = len(pred_idxs) - 1
         i = pred_idxs[last]
         pick.append(i)
-        suppress = [last]  # pred_idxs에 있는 애들 없애는 역할
+        suppress = [last]  # pred_idxs 에 있는 애들 없애는 역할
 
         # 중첩 비율 계산을 통해 필터링할 사각형들을 찾는 과정입니다.
         # 예측값 인덱스들을 모두 순회합니다.
@@ -328,10 +379,10 @@ def rectangle_filter(coords, overlapThresh, predicts):
 
             # 두 사각형이 겹쳐진 곳의 넓이와 현재 인덱스에 해당하는 사각형의 넓이의 중첩 비율을 구합니다.
             # 겹쳐있지 않을 경우, w or h 의 값이 0이기 때문에 중첩 비율 또한 0이 됩니다.
-            overlap = float(w*h)/area[j]
+            overlap = float(w * h) / area[j]
 
-            # 중첩 비율이 지정해준 기준치 이상일 경우, 해당 사각형을 제외 리스트에 추가합니다.
-            if overlap > overlapThresh:
+            # 중첩 비율이 지정해준 기준치(0.1) 이상일 경우, 해당 사각형을 제외 리스트에 추가합니다.
+            if overlap > 0.1:
                 suppress.append(pos)
 
         # pred_idxs 에서 suppress 리스트에 들어간 값들을 제거합니다. 이후 pred_idxs 에 값이 남아있지 않을 경우, 반복을 종료합니다.
@@ -353,7 +404,7 @@ def draw_rectangles(img, coords, color, width, predicts):
     Return:
         np.array : 목표 지점에 사각형이 그려진 이미지를 반환합니다.
     """
-    filtered_coords = rectangle_filter(coords, 0.3, predicts)
+    filtered_coords = rectangle_filter(coords, predicts)
 
     for coord in filtered_coords:
         img = cv2.rectangle(img, tuple(coord[:2]), tuple(coord[2:]), color, width)
