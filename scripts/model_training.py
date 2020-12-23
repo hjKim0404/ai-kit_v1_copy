@@ -29,13 +29,13 @@ bg_folder = f'./data/book{str(book_number)}/common/block_imgs'
 
 tfp = TightFaceProvider(fg_folder, bg_folder, batch_size=8)
 
-# # tfp 가 정상적으로 생성되었는지 확인하기 위한 부분
-# print(len(tfp))
-#
-# sample_imgs = tfp[0][0]
-# sample_labs = tfp[0][1]
-#
-# show_images(sample_imgs, titles=sample_labs.tolist())
+# tfp 가 정상적으로 생성되었는지 확인하기 위한 부분
+print(len(tfp))
+
+sample_imgs = tfp[0][0]
+sample_labs = tfp[0][1]
+
+show_images(sample_imgs, titles=sample_labs.tolist())
 
 # 4. 학습 모델을 구축한다.
 inputs = Input(shape=(36, 36, 3), name='inputs')
@@ -58,11 +58,11 @@ pool = MaxPooling2D()(relu)
 flat = Flatten()(pool)
 
 # fully connected layer
-fcn = Dense(units=256, activation='relu')(flat)
+fcn = Dense(units=256, kernel_initializer='he_normal')(flat)
 norm = BatchNormalization()(fcn)
 relu = ReLU()(norm)
 
-fcn = Dense(units=256, activation='relu')(relu)
+fcn = Dense(units=256, kernel_initializer='he_normal')(relu)
 norm = BatchNormalization()(fcn)
 relu = ReLU()(norm)
 
@@ -130,7 +130,7 @@ model = load_model("./models/book1_model")
 
 # 8. 검증용 데이터를 불러온다.
 
-val_folder = f"./data/book{str(book_number)}/common/full_image_val"
+val_folder = f"./data/book{str(book_number)}/common/full_image_test"
 imgs = glob_all_files(val_folder)
 
 assert imgs, print("올바른 경로가 아니거나, 경로 내에 검증용 이미지가 존재하지 않습니다.")

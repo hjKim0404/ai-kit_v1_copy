@@ -21,9 +21,9 @@ book_number = 1
 
 paths = glob_all_files(f"./data/book{str(book_number)}/common/full_image_test")
 
-imgs = paths2numpy(paths)
+assert paths, print("올바른 경로가 아니거나, 경로 내에 평가용 이미지가 존재하지 않습니다.")
 
-assert imgs, print("올바른 경로가 아니거나, 경로 내에 평가용 이미지가 존재하지 않습니다.")
+imgs = paths2numpy(paths)
 
 bucket_crop_imgs, bucket_crop_crds = images_cropper(imgs, 10, 10, 36, 36)
 
