@@ -1,8 +1,10 @@
 import numpy as np
 from tensorflow.keras.utils import Sequence
-from utils.helper import glob_all_files, random_patch, show_images, paths2numpy, images_cropper
-from utils.helper import face_resize_augmentation
-from utils.helper import image_info
+from utils.helper import glob_all_files, paths2numpy, face_resize_augmentation, images_cropper
+from utils.helper import random_patch
+from utils.helper import show_images
+
+# from utils.helper import image_info   # 현재 사용하지 않는 외부 함수이기 때문에 주석처리 합니다.
 
 
 class TightFaceProvider(Sequence):
@@ -25,24 +27,37 @@ class TightFaceProvider(Sequence):
 
         # 월리 얼굴을 경로로 가져온다.
         self.fg_imgs = glob_all_files(fg_folder)
+
+        assert self.fg_imgs, print("올바른 경로가 아니거나, 경로 내에 얼굴 이미지가 존재하지 않습니다.")
+
         # 가져온 경로에서 이미지 파일을 numpy 배열로 바꾼다.
         self.fg_imgs = paths2numpy(self.fg_imgs)
         # numpy 배열의 월리 얼굴들을 사이즈별로 새로 생성한다.
         self.fg_imgs = face_resize_augmentation(self.fg_imgs)
 
+        """
+        # **test: 현재 crop 사이즈를 외부에서 입력받은 값을 기준으로 하기 때문에 주석처리 합니다.
+        
         # 월리 얼굴의 최대 높이, 최대 너비를 구한다.
         (max_h, min_h), (max_w, _), (_, _) = image_info(self.fg_imgs)
         # 높이와 너비 중 더 큰 것을 max_length에 저장한다.
         max_length = np.maximum(max_h, max_w)
         # stride size를 설정한다.
         stride = int(max_length/4)
+        """
 
         # background 이미지의 경로를 가져온다.
         self.bg_imgs = glob_all_files(bg_folder)
+
+        assert self.bg_imgs, print("올바른 경로가 아니거나, 경로 내에 배경 이미지가 존재하지 않습니다.")
+
         # 가져온 경로에서 이미지 파일을 numpy로 바꾼다.
         self.bg_imgs = paths2numpy(self.bg_imgs)
         # 크기가 max_length인 filter를 siride 단위로 background 이미지를 분할한다.
-        self.bg_imgs, _ = images_cropper(self.bg_imgs, stride, stride, max_length+1, max_length+1)
+        self.bg_imgs, _ = images_cropper(self.bg_imgs, 10, 10, 36, 36)
+
+        # images_cropper로 인해 5차원 배열이 된 self.bg_imgs를 4차원 배열로 만들어주기 위한 부분
+        self.bg_imgs = np.concatenate(self.bg_imgs, axis=0)
 
         # background 이미지를 무작위로 섞습니다.
         np.random.shuffle(self.bg_imgs)
