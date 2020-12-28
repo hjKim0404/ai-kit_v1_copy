@@ -1,8 +1,8 @@
 import numpy as np
 from tensorflow.keras.utils import Sequence
-from utils.helper import glob_all_files, random_patch, show_images, paths2numpy, images_cropper
-from utils.helper import face_resize_augmentation, random_imaug
-
+from utils.helper import glob_all_files, paths2numpy, face_resize_augmentation, images_cropper
+from utils.helper import random_imaug, random_patch
+from utils.helper import show_images
 
 # from utils.helper import image_info   # 현재 사용하지 않는 외부 함수이기 때문에 주석처리 합니다.
 
@@ -52,7 +52,7 @@ class TightFaceProvider(Sequence):
         # 배치 사이즈를 입력받은 배치 사이즈 * 찾고자하는 캐릭터들의 수+1 로 설정한다.
         self.batch_size = batch_size * (self.path_count + 1)
         """
-        현재 crop 사이즈를 외부에서 입력받은 값을 기준으로 하기 때문에 주석처리 합니다.
+        # **test: 현재 crop 사이즈를 외부에서 입력받은 값을 기준으로 하기 때문에 주석처리 합니다.
         
         # 월리 얼굴의 최대 높이, 최대 너비를 구한다.
         (max_h, min_h), (max_w, _), (_, _) = image_info(self.fg_imgs)
