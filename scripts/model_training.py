@@ -25,24 +25,24 @@ tfp = TightFaceProvider(fg_folder, bg_folder, batch_size=64)
 # 4. 학습 모델을 구축한다.
 inputs = Input(shape=(36, 36, 3), name='inputs')
 
-conv = Conv2D(filters=32, kernel_size=3, kernel_initializer='he_normal')(inputs)
+conv = Conv2D(filters=32, kernel_size=3, padding='same', kernel_initializer='he_normal')(inputs)
 norm = BatchNormalization()(conv)
 relu = ReLU()(norm)
 pool = MaxPooling2D()(relu)
 
-conv = Conv2D(filters=64, kernel_size=3, kernel_initializer='he_normal')(pool)
+conv = Conv2D(filters=64, kernel_size=3, padding='same', kernel_initializer='he_normal')(pool)
 norm = BatchNormalization()(conv)
 relu = ReLU()(norm)
 pool = MaxPooling2D()(relu)
 
-conv = Conv2D(filters=128, kernel_size=3, kernel_initializer='he_normal')(pool)
+conv = Conv2D(filters=128, kernel_size=3, padding='same', kernel_initializer='he_normal')(pool)
 norm = BatchNormalization()(conv)
 relu = ReLU()(norm)
 pool = MaxPooling2D()(relu)
 
 flat = Flatten()(pool)
 
-#fully connected layer
+# fully connected layer
 fcn = Dense(units=256, kernel_initializer='he_normal')(flat)
 norm = BatchNormalization()(fcn)
 relu = ReLU()(norm)
