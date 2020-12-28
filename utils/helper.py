@@ -269,7 +269,7 @@ def show_images(images, figsize=(10, 10), titles=None):
     plt.show()
 
 
-def find_non_background(predicts, limit=0, target=0):
+def find_all_target(predicts, limit=0, target=0):
     """
     Describes:
         학습 모델이 이미지에서 찾고자하는 대상으로 판단되는 모든 부분을 true 로 설정하는 마스크를 생성하는 함수입니다.
@@ -293,7 +293,7 @@ def find_non_background(predicts, limit=0, target=0):
     return bool_mask
 
 
-def find_max_prediction(predicts, target=0):
+def find_max_target(predicts, target=0):
     """
     Describes:
         학습 모델이 이미지에서 찾고자하는 대상의 예측값이 가장 높은 부분을 true 로 설정하는 마스크를 생성하는 함수입니다.
