@@ -11,31 +11,31 @@ from tensorflow.keras.layers import BatchNormalization, ReLU, MaxPooling2D
 from tensorflow.keras.models import Model, load_model
 
 from utils.datagenerator import TightFaceProvider
-from utils.helper import show_images
 from utils.helper import glob_all_files, paths2numpy, images_cropper
-from utils.helper import find_non_background, find_max_prediction, draw_rectangles
+from utils.helper import find_all_target, find_max_target, draw_rectangles
+from utils.helper import show_images
 
 # 3. 학습용 데이터를 불러온 후 인공지능 모델 학습에 알맞게 가공해준다.
 # 학습 및 검증에 사용될 월리 책 번호
 book_number = 1
 
 # 학습에 사용될 이미지들의 경로를 불러온다
-fg_folder = [f'./data/book{str(book_number)}/Wally/face_tight_crop',
-             f'./data/book{str(book_number)}/girlfriend/face_tight_crop',
-             f'./data/book{str(book_number)}/magician/face_tight_crop',
-             f'./data/book{str(book_number)}/fake/face_tight_crop']
+fg_folder = [f'./data/book{str(book_number)}/train_imgs/waly_face',
+             f'./data/book{str(book_number)}/train_imgs/girl_face',
+             f'./data/book{str(book_number)}/train_imgs/magi_face',
+             f'./data/book{str(book_number)}/train_imgs/fake_face']
 
-bg_folder = f'./data/book{str(book_number)}/common/block_imgs'
+bg_folder = f'./data/book{str(book_number)}/train_imgs/back_imgs'
 
 tfp = TightFaceProvider(fg_folder, bg_folder, batch_size=8)
 
-# tfp 가 정상적으로 생성되었는지 확인하기 위한 부분
-print(len(tfp))
-
-sample_imgs = tfp[0][0]
-sample_labs = tfp[0][1]
-
-show_images(sample_imgs, titles=sample_labs.tolist())
+# # tfp 가 정상적으로 생성되었는지 확인하기 위한 부분
+# print(len(tfp))
+#
+# sample_imgs = tfp[0][0]
+# sample_labs = tfp[0][1]
+#
+# show_images(sample_imgs, titles=sample_labs.tolist())
 
 # 4. 학습 모델을 구축한다.
 inputs = Input(shape=(36, 36, 3), name='inputs')
@@ -67,7 +67,7 @@ norm = BatchNormalization()(fcn)
 relu = ReLU()(norm)
 
 # 5가지의 카테고리를 softmax를 사용하여 분류
-pred = Dense(units=5, activation='softmax')(relu)
+pred = Dense(units=(tfp.path_count+1), activation='softmax')(relu)
 
 # 모델 생성
 model = Model(inputs, pred)
@@ -78,11 +78,11 @@ model.compile('adam', loss='sparse_categorical_crossentropy', metrics=['sparse_c
 
 # # **test: 모델 학습 및 저장 부분. 현재는 모델을 불러와서 작업을 하고 있기 때문에 임시 주석처리 합니다.
 # # 학습과 함께 사용될 검증 데이터를 불러오는 부분
-# val_paths = [f"./data/book{str(book_number)}/common/block_imgs_val",
-#              f"./data/book{str(book_number)}/wally/face_val",
-#              f"./data/book{str(book_number)}/girlfriend/face_val",
-#              f"./data/book{str(book_number)}/magician/face_val",
-#              f"./data/book{str(book_number)}/fake/face_val"]
+# val_paths = [f"./data/book{str(book_number)}/valid_imgs/back_imgs",
+#              f"./data/book{str(book_number)}/valid_imgs/waly_face",
+#              f"./data/book{str(book_number)}/valid_imgs/girl_face",
+#              f"./data/book{str(book_number)}/valid_imgs/magi_face",
+#              f"./data/book{str(book_number)}/valid_imgs/fake_face"]
 #
 # paths = glob_all_files(val_paths)
 #
@@ -130,12 +130,12 @@ model = load_model("./models/book1_model")
 
 # 8. 검증용 데이터를 불러온다.
 
-val_folder = f"./data/book{str(book_number)}/common/full_image_test"
-imgs = glob_all_files(val_folder)
+val_folder = f"./data/book{str(book_number)}/test_imgs"
+paths = glob_all_files(val_folder)
 
-assert imgs, print("올바른 경로가 아니거나, 경로 내에 검증용 이미지가 존재하지 않습니다.")
+assert paths, print("올바른 경로가 아니거나, 경로 내에 검증용 전체 이미지가 존재하지 않습니다.")
 
-imgs = paths2numpy(imgs)
+imgs = paths2numpy(paths)
 
 bucket_crop_imgs, bucket_crop_crds = images_cropper(imgs, 10, 10, 36, 36)
 
@@ -148,15 +148,15 @@ for i, img in enumerate(imgs):
     predicts = model.predict(cropped_imgs)
 
     # mask 를 생성하는 함수들 입니다. 둘 중에서 원하는 방식을 사용할 수 있습니다.
-    # find_non_background: 학습 모델이 이미지에서 배경이라고 판단하지 않은 부분의 인덱스들을 가져옵니다.
+    # find_all_target: 학습 모델이 이미지에서 배경이라고 판단하지 않은 부분의 인덱스들을 가져옵니다.
     #                      limit 변수에 0이상 1미만의 값을 넣을 경우, 해당 값을 초과하는 예측값을 가진 부분의 인덱스들만을 가져옵니다.
 
-    # find_max_prediction: 학습 모델이 이미지에서 목표 캐릭터의 얼굴일 확률이 가장 높은 부분의 인덱스들을 가져옵니다.
+    # find_max_target: 학습 모델이 이미지에서 목표 캐릭터의 얼굴일 확률이 가장 높은 부분의 인덱스들을 가져옵니다.
 
     # 두 함수 모두, target 부분에 넣는 인자에 따라 특정 캐릭터의 예측 위치를 가져올 수 있습니다.
     # 0: 모든 캐릭터, 1: 월리, 2: 여자친구, 3: 마법사, 4: 가짜
-    mask = find_non_background(predicts, limit=0, target=0)
-    # mask = find_max_prediction(predicts, target=0)
+    mask = find_all_target(predicts, limit=0, target=0)
+    # mask = find_max_target(predicts, target=0)
 
     # show_images(cropped_imgs[bool_mask])    # 불리언 마스크를 적용시킨 결과로 얻은 월리의 얼굴로 추정되는 이미지 조각들을 출력
     target_crds = np.array(cropped_crds)[mask]  # 찾고자 하는 캐릭터의 얼굴이 있을 것으로 예상되는 좌표들을 저장
