@@ -32,7 +32,7 @@ for img_ind, img in enumerate(imgs):
 
     # Wally 라고 생각되는 이미지의 index을 가져옵니다.
     predicts = model.predict(cropped_imgs)
-    bool_mask = (predicts > 0.5)[:, 0]
+    bool_mask = (predicts > 0.4)[:, 0]
 
     # Wally 라고 생각되는 이미지 좌표를 가져옵니다.
     target_crds = np.array(cropped_crds)[bool_mask]
