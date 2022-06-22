@@ -230,7 +230,7 @@ def random_imaug(images, is_bg = False):
                 iaa.Rotate((-10, 10)),
                 iaa.MultiplyBrightness((0.5, 1.5)),
             ),
-            iaa.Resize((0.7, 1.0))
+            iaa.Resize((0.9, 1.0))
         ], random_order=True)  # apply augmenters in random order
         
     images_aug = seq(images=images)
