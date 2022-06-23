@@ -1,0 +1,2 @@
+model_checkpoint_path: "ai-kit_model"
+all_model_checkpoint_paths: "ai-kit_model"

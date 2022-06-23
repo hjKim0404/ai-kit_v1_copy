@@ -23,17 +23,15 @@ class TightFaceProvider(Sequence):
         # 지정된 배치 사이즈
         self.batch_size = batch_size
 
-        # 학습용 월리 이미지를 가져온다.
+        # 학습용, 검증용 월리 이미지를 가져온다.
         self.fg_imgs = self.set_fg_imgs(fg_folder)
-        
-        # 검증용 월리 이미지를 가져온다.
         self.val_fg_imgs = self.set_fg_imgs(val_fg_folder)
         
         # 월리 얼굴의 최대 높이, 최대 너비를 구한다.
         (max_h, min_h), (max_w, _), (_, _) = image_info(self.fg_imgs + self.val_fg_imgs)
         # 높이와 너비 중 더 큰 것을 max_length에 저장한다.
         self.max_length = np.maximum(max_h, max_w)
-        # stride size를 설정한다.
+        # stride 를 설정한다.
         self.stride = int(self.max_length/4)
 
         # background 이미지 폴더 경로에 저장된 이미지들을 가져온다.
@@ -90,7 +88,10 @@ class TightFaceProvider(Sequence):
         np.random.shuffle(self.val_bg_imgs)
 
     def set_fg_imgs(self, path):
-         # 월리 얼굴 이미지들이 저장된 경로를 가져온다.
+        """
+        월리 이미지를 가져옵니다.
+        """
+         # 월리 이미지들이 저장된 경로를 가져온다.
         fg_imgs = glob_all_files(path)
         # 가져온 경로에서 이미지 파일을 numpy 배열로 바꾼다.
         fg_imgs = paths2numpy(fg_imgs)
@@ -100,6 +101,9 @@ class TightFaceProvider(Sequence):
         return fg_imgs
     
     def set_bg_imgs(self, path):
+        """
+        배경 이미지를 crop 해서 가져옵니다.
+        """
         # background 이미지의 경로를 가져온다.
         bg_imgs = glob_all_files(path)
         # 가져온 경로에서 이미지 파일을 numpy로 바꾼다.
