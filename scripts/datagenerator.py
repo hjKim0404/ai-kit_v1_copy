@@ -96,7 +96,7 @@ class TightFaceProvider(Sequence):
         # 가져온 경로에서 이미지 파일을 numpy 배열로 바꾼다.
         fg_imgs = paths2numpy(fg_imgs)
         # numpy 배열의 월리 얼굴들을 사이즈별로 새로 생성한다.
-        fg_imgs = face_resize_augmentation(fg_imgs)
+#         fg_imgs = face_resize_augmentation(fg_imgs)
         
         return fg_imgs
     
