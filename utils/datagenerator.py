@@ -1,8 +1,8 @@
 import numpy as np
 from tensorflow.keras.utils import Sequence
-from utils.helper import glob_all_files, random_patch, show_images, paths2numpy, images_cropper
-from utils.helper import face_resize_augmentation
-from utils.helper import image_info
+from helper import glob_all_files, random_patch, show_images, paths2numpy, images_cropper
+from helper import face_resize_augmentation
+from helper import image_info
 
 
 class TightFaceProvider(Sequence):
